@@ -214,7 +214,7 @@
                     <appSettings>
                         <property>
                             <name>MONGODB_URI</name>
-                            <value>mongodb+srv://Kappa-Statistics-BackEnd:Ingenieria3.@cluster0.3f7eyme.mongodb.net/Kappa-Statistics-BackEnd?retryWrites=true&amp;w=majority</value>
+                            <value>mongodb+srv://Kappa-Statistics-BackEnd:Ingenieria3.@cluster0.3f7eyme.mongodb.net/Kappa-Statistics-BackEndGIT ?retryWrites=true&amp;w=majority</value>
                         </property>
                     </appSettings>
                 </configuration>
