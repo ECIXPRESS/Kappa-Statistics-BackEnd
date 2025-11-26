@@ -1,4 +1,4 @@
-package edu.dosw.Kappa_Statistics_BackEnd;
+package edu.dosw.Kappa_Stats_BackEnd;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

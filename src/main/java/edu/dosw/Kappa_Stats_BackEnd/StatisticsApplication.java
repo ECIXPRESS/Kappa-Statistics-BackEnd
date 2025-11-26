@@ -1,13 +1,11 @@
-package edu.dosw.Kappa_Statistics_BackEnd;
+package edu.dosw.Kappa_Stats_BackEnd;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class application {
-
+public class StatisticsApplication {
     public static void main(String[] args) {
-        SpringApplication.run(application.class, args);
+        SpringApplication.run(StatisticsApplication.class, args);
     }
-
 }
