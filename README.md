@@ -45,7 +45,7 @@
 ## 📑 Tabla de Contenidos
 
 1. 👤 [Integrantes](#1--integrantes)
-2. 🎯 [Objetivo del Proyecto](#2--objetivo-del-proyecto)
+2. 🎯 [Microservicio de Estadísticas](#2--microservicio-de-estadisticas)
 3. ⚡ [Funcionalidades principales](#3--funcionalidades-principales)
 4. 📋 [Manejo de Estrategia de versionamiento y branches](#4--manejo-de-estrategia-de-versionamiento-y-branches)
     - 4.1 [Convenciones para crear ramas](#41-convenciones-para-crear-ramas)
@@ -81,22 +81,21 @@
 - Marlio Charry
 - Juan Pablo Contreras
 
-## 2. 🎯 Objetivo del Proyecto
+## 2. 📈 Microservicio de Estadísticas
 
-En la actualidad, las cafeterias y papelerias dentro de nuestro campus universitario se presentan serias dificultades
-operativas durante las horas pico. Estudiantes, docentes y personal administrativo deben enfrentar largas filas y
-esperas prolongadas para adquirir sus alimentos o materiales pedidos, lo que genera gran perdida de tiempo, generando
-retrasos a clases, desorganizacon y una mala experiencia tanto para los usuarios como para los trabajadores.
-
-El modelo de atención presencial genera mucha agromelación, errores en pedidos y pagos, poca trazabilidad en las ventas,
-generando poca eficiencia operativa. Por lo cual se requiere un sistema digital que optimice los procesos de compra, para
-reducir los tiempos de espera y mejorando la experiencia de todos.
+Microservicio REST encargado de generar reportes y métricas de ventas a partir de los registros de pedidos. Provee
+endpoints para obtener un reporte diario por fecha, un resumen acumulado y un ranking de los productos más vendidos.
+Diseñado para integrarse con otros microservicios o frontends, expone respuestas en JSON y es apto para despliegue en
+contenedores.
 
 ---
 
 ## 3. ⚡ Funcionalidades principales
 
-
+- Generar reporte diario de ventas por fecha.
+- Obtener resumen general de ventas (totales acumulados).
+- Obtener ranking de los productos más vendidos.
+- Endpoints REST ligeros que devuelven JSON para integración rápida.
 
 ## 4. 📋 Manejo de Estrategia de versionamiento y branches
 
@@ -256,10 +255,50 @@ A continuación se detallan las principales tecnologías empleadas en el proyect
 
 ## 6. 🧩 Funcionalidad
 
+Aquí se describen las funcionalidades principales del microservicio y los endpoints disponibles.
 
+- Reporte diario de ventas
+  - Endpoint: `GET /statistics/daily`
+  - Parámetros: `date` (query) — formato `YYYY-MM-DD`
+  - Descripción: Devuelve un objeto `DailySalesReport` con métricas del día solicitado (totales de ventas, número de
+    órdenes y detalle agregado por producto).
+
+- Resumen general de ventas
+  - Endpoint: `GET /statistics/summary`
+  - Parámetros: ninguno
+  - Descripción: Devuelve un `SummaryReport` con indicadores agregados del sistema (ventas totales, número de órdenes,
+    otros agregados relevantes).
+
+- Ranking de productos más vendidos
+  - Endpoint: `GET /statistics/top-products`
+  - Parámetros: ninguno
+  - Descripción: Devuelve una lista de `ProductSalesReport` con los productos ordenados por unidades vendidas o ingreso,
+    útil para identificar los productos top.
+
+Nota: las estructuras de respuesta (`DailySalesReport`, `SummaryReport`, `ProductSalesReport`) están definidas en el
+paquete `Application.Dtos` del proyecto y se devuelven en formato JSON.
 
 ## 7. 📊 Diagramas
 
+### 7.1 Diagrama de Contexto
+
+![Contexto.png](docs/imagenes/Contexto.png)
+
+### 7.2 Diagrama de Casos de Usos
+
+![CasosDeUso.png](docs/imagenes/CasosDeUso.png)
+
+### 7.3 Diagrama de Clases
+
+![Clases.png](docs/imagenes/Clases.png)
+
+### 7.4 Diagrama de Componentes Específico
+
+![ComponentesEspecifico.png](docs/imagenes/ComponentesEspecifico.png)
+
+### 7.5 Diagrama de Componentes General
+
+![ComponentesGeneral.png](docs/imagenes/ComponentesGeneral.png)
 
 
 ## 8. 🌐 Endpoints expuestos y su información de entrada y salida
