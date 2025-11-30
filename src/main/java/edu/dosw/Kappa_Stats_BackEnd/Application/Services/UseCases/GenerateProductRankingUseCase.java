@@ -16,8 +16,8 @@ public class GenerateProductRankingUseCase {
 
     private final OrderRecordRepository repository;
 
-    public List<ProductSalesReport> generateTopProducts() {
-        List<OrderRecord> all = repository.findAll();
+    public List<ProductSalesReport> generateTopProducts(String store) {
+        List<OrderRecord> all = repository.findAll().stream().filter(r->r.getStore().equals(store)).toList();
 
         Map<String, List<OrderRecord>> grouped = all.stream()
                 .collect(Collectors.groupingBy(OrderRecord::getProductId));
@@ -31,6 +31,7 @@ public class GenerateProductRankingUseCase {
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             result.add(new ProductSalesReport(
+                    store,
                     entry.getKey(),
                     totalSold,
                     revenue

@@ -17,9 +17,9 @@ public class GenerateSummaryUseCase {
     private final OrderRecordRepository repository;
     private final GenerateProductRankingUseCase rankingUseCase;
 
-    public SummaryReport generate() {
+    public SummaryReport generate(String store) {
 
-        List<OrderRecord> all = repository.findAll();
+        List<OrderRecord> all = repository.findAll().stream().filter(r->r.getStore().equals(store)).toList();
 
         int totalOrders = all.size();
         int totalProducts = all.stream().mapToInt(OrderRecord::getQuantity).sum();
@@ -28,9 +28,10 @@ public class GenerateSummaryUseCase {
                 .map(OrderRecord::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        List<ProductSalesReport> topProducts = rankingUseCase.generateTopProducts();
+        List<ProductSalesReport> topProducts = rankingUseCase.generateTopProducts(store);
 
         return new SummaryReport(
+                store,
                 totalOrders,
                 totalProducts,
                 totalRevenue,
