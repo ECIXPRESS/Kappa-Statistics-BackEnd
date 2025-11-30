@@ -17,7 +17,7 @@ public class OrderRecord {
 
     @Id
     private String id;
-
+    private String store;
     private String orderId;
     private String productId;
     private Integer quantity;
