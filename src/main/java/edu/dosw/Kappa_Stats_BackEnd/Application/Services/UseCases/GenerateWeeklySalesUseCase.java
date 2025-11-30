@@ -21,7 +21,7 @@ public class GenerateWeeklySalesUseCase {
         LocalDate start = anyDateInWeek.with(DayOfWeek.MONDAY);
         LocalDate end = anyDateInWeek.with(DayOfWeek.SUNDAY);
 
-        List<OrderRecord> weekRecords = repository.findByDateBetween(start, end).stream().filter(r->r.getStore().equals(store)).toList();;
+        List<OrderRecord> weekRecords = repository.findByDateBetween(start, end).stream().filter(r->r.getStore().equals(store)).toList();
 
         List<OrderRecord> records = weekRecords.stream().filter(r->r.getStore().equals(store)).toList();
 
