@@ -1,6 +1,7 @@
 package edu.dosw.Kappa_Stats_BackEnd.Infrastructure.Web;
 
 import edu.dosw.Kappa_Stats_BackEnd.Application.Dtos.*;
+import edu.dosw.Kappa_Stats_BackEnd.Application.Services.StatsServices.ExcelAllStatisticsService;
 import edu.dosw.Kappa_Stats_BackEnd.Application.Services.UseCases.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -18,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/statistics")
 @RequiredArgsConstructor
+
 public class StatisticsController {
 
     private final GenerateDailySalesUseCase daily;
@@ -25,6 +28,7 @@ public class StatisticsController {
     private final GenerateProductRankingUseCase topProducts;
     private final GenerateWeeklySalesUseCase weekly;
     private final GenerateMonthlySalesUseCase monthly;
+    private final ExcelAllStatisticsService excelAllService;
 
 
     @Operation(
@@ -221,4 +225,38 @@ public class StatisticsController {
     ) {
         return topProducts.generateTopProducts(store);
     }
+
+    @Operation(
+            summary = "Exportar todas las estadísticas en Excel",
+            description = "Genera y descarga un archivo Excel con todas las estadísticas de la tienda especificada.",
+            parameters = {
+                    @Parameter(
+                            name = "store",
+                            description = "Identificador de la tienda",
+                            required = true,
+                            example = "STORE-01"
+                    )
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Archivo Excel generado exitosamente",
+                            content = @Content(
+                                    mediaType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                    schema = @Schema(type = "string", format = "binary")
+                            )
+                    )
+            }
+    )
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> exportAllStatistics(@RequestParam String store) {
+        byte [] excel = excelAllService.generateAllStatistics(store);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=all-statistics.xlsx")
+                .body(excel);
+
+    }
+
+
 }

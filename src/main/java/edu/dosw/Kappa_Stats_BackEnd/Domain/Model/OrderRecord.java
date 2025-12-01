@@ -23,4 +23,5 @@ public class OrderRecord {
     private Integer quantity;
     private BigDecimal totalPrice;
     private LocalDate date;
+    private String productName;
 }
