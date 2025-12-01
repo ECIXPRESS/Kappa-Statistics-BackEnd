@@ -67,7 +67,8 @@ public class ExcelAllStatisticsService {
         sheet.createRow(i).createCell(0).setCellValue("Date");         sheet.getRow(i++).createCell(1).setCellValue(r.date());
         sheet.createRow(i).createCell(0).setCellValue("Total Orders"); sheet.getRow(i++).createCell(1).setCellValue(r.totalOrders());
         sheet.createRow(i).createCell(0).setCellValue("Products Sold");sheet.getRow(i++).createCell(1).setCellValue(r.totalProductsSold());
-        sheet.createRow(i).createCell(0).setCellValue("Revenue");      sheet.getRow(i).createCell(1).setCellValue((RichTextString) r.totalRevenue());
+        sheet.createRow(i).createCell(0).setCellValue("Revenue");      sheet.getRow(i).createCell(1).setCellValue(r.totalRevenue().doubleValue());
+
         autoSize(sheet);
     }
 
@@ -79,7 +80,8 @@ public class ExcelAllStatisticsService {
         sheet.createRow(i).createCell(0).setCellValue("Week End");     sheet.getRow(i++).createCell(1).setCellValue(r.endDate().toString());
         sheet.createRow(i).createCell(0).setCellValue("Total Orders"); sheet.getRow(i++).createCell(1).setCellValue(r.totalOrders());
         sheet.createRow(i).createCell(0).setCellValue("Products Sold");sheet.getRow(i++).createCell(1).setCellValue(r.totalProductsSold());
-        sheet.createRow(i).createCell(0).setCellValue("Revenue");      sheet.getRow(i).createCell(1).setCellValue((RichTextString) r.totalRevenue());
+        sheet.createRow(i).createCell(0).setCellValue("Revenue");      sheet.getRow(i).createCell(1).setCellValue(r.totalRevenue().doubleValue());
+
         autoSize(sheet);
     }
 
@@ -91,7 +93,8 @@ public class ExcelAllStatisticsService {
         sheet.createRow(i).createCell(0).setCellValue("Month");        sheet.getRow(i++).createCell(1).setCellValue(r.month());
         sheet.createRow(i).createCell(0).setCellValue("Total Orders"); sheet.getRow(i++).createCell(1).setCellValue(r.totalOrders());
         sheet.createRow(i).createCell(0).setCellValue("Products Sold");sheet.getRow(i++).createCell(1).setCellValue(r.totalProductsSold());
-        sheet.createRow(i).createCell(0).setCellValue("Revenue");      sheet.getRow(i).createCell(1).setCellValue((RichTextString) r.totalRevenue());
+        sheet.createRow(i).createCell(0).setCellValue("Revenue");      sheet.getRow(i).createCell(1).setCellValue(r.totalRevenue().doubleValue());
+
         autoSize(sheet);
     }
 
@@ -101,7 +104,8 @@ public class ExcelAllStatisticsService {
         sheet.createRow(i).createCell(0).setCellValue("Store ID");     sheet.getRow(i++).createCell(1).setCellValue(r.store());
         sheet.createRow(i).createCell(0).setCellValue("Total Orders"); sheet.getRow(i++).createCell(1).setCellValue(r.totalOrders());
         sheet.createRow(i).createCell(0).setCellValue("Products Sold");sheet.getRow(i++).createCell(1).setCellValue(r.totalProductsSold());
-        sheet.createRow(i).createCell(0).setCellValue("Revenue");      sheet.getRow(i).createCell(1).setCellValue((RichTextString) r.totalRevenue());
+        sheet.createRow(i).createCell(0).setCellValue("Revenue");      sheet.getRow(i).createCell(1).setCellValue(r.totalRevenue().doubleValue());
+
         autoSize(sheet);
     }
 
@@ -118,7 +122,8 @@ public class ExcelAllStatisticsService {
             r.createCell(0).setCellValue(p.productId());
             r.createCell(1).setCellValue(p.productName());
             r.createCell(2).setCellValue(p.totalSold());
-            r.createCell(3).setCellValue((RichTextString) p.totalRevenue());
+            r.createCell(3).setCellValue(p.totalRevenue().doubleValue());
+
         }
         autoSize(sheet);
     }

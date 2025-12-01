@@ -20,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/statistics")
 @RequiredArgsConstructor
+
 public class StatisticsController {
 
     private final GenerateDailySalesUseCase daily;
