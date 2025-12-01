@@ -96,6 +96,7 @@ contenedores.
 - Obtener resumen general de ventas (totales acumulados).
 - Obtener ranking de los productos más vendidos.
 - Endpoints REST ligeros que devuelven JSON para integración rápida.
+- Exportar estadísticas completas a Excel (`.xlsx`) para descarga.
 
 ## 4. 📋 Manejo de Estrategia de versionamiento y branches
 
@@ -258,25 +259,43 @@ A continuación se detallan las principales tecnologías empleadas en el proyect
 Aquí se describen las funcionalidades principales del microservicio y los endpoints disponibles.
 
 - Reporte diario de ventas
-  - Endpoint: `GET /statistics/daily`
-  - Parámetros: `date` (query) — formato `YYYY-MM-DD`
+  - Endpoint: `GET /api/statistics/daily`
+  - Parámetros: `date` (query) — formato `YYYY-MM-DD`, `store` (query) — identificador de la tienda
   - Descripción: Devuelve un objeto `DailySalesReport` con métricas del día solicitado (totales de ventas, número de
     órdenes y detalle agregado por producto).
 
+- Reporte semanal de ventas
+  - Endpoint: `GET /api/statistics/weekly`
+  - Parámetros: `date` (query) — cualquier fecha dentro de la semana, `store` (query)
+  - Descripción: Devuelve un `WeeklySalesReport` con métricas agregadas para la semana correspondiente.
+
+- Reporte mensual de ventas
+  - Endpoint: `GET /api/statistics/monthly`
+  - Parámetros: `year` (query), `month` (query), `store` (query)
+  - Descripción: Devuelve un `MonthlySalesReport` con métricas agregadas para el mes solicitado.
+
 - Resumen general de ventas
-  - Endpoint: `GET /statistics/summary`
-  - Parámetros: ninguno
+  - Endpoint: `GET /api/statistics/summary`
+  - Parámetros: `store` (query)
   - Descripción: Devuelve un `SummaryReport` con indicadores agregados del sistema (ventas totales, número de órdenes,
     otros agregados relevantes).
 
 - Ranking de productos más vendidos
-  - Endpoint: `GET /statistics/top-products`
-  - Parámetros: ninguno
+  - Endpoint: `GET /api/statistics/top-products`
+  - Parámetros: `store` (query)
   - Descripción: Devuelve una lista de `ProductSalesReport` con los productos ordenados por unidades vendidas o ingreso,
     útil para identificar los productos top.
 
-Nota: las estructuras de respuesta (`DailySalesReport`, `SummaryReport`, `ProductSalesReport`) están definidas en el
-paquete `Application.Dtos` del proyecto y se devuelven en formato JSON.
+- Exportar todas las estadísticas a Excel
+  - Endpoint: `GET /api/statistics/export`
+  - Parámetros: `store` (query)
+  - Descripción: Genera y devuelve un archivo Excel (`all-statistics.xlsx`) con un reporte completo de estadísticas
+    para la tienda solicitada. Implementado mediante `ExcelAllStatisticsService` (Apache POI). La respuesta incluye
+    cabecera `Content-Disposition` para forzar la descarga.
+
+Nota: las estructuras de respuesta (`DailySalesReport`, `SummaryReport`, `ProductSalesReport`, etc.) están definidas
+en el paquete `Application.Dtos` del proyecto y se devuelven en formato JSON salvo el endpoint de exportación que devuelve
+un archivo binario Excel.
 
 ## 7. 📊 Diagramas
 
@@ -425,31 +444,69 @@ La siguiente tabla resume los principales tipos de excepciones manejadas en el s
 
 ---
 
-## 10. 🧪 Evidencia de las pruebas y cómo ejecutarlas
+## 10. 🧪 Evidencia de cobertura de las pruebas y cómo ejecutarlas
+
+![Jacoco.png](docs/imagenes/Jacoco.png)
+
+#### **📋 Ejecutar todas las pruebas**
+```bash
+mvn clean test
+```
+> **💡 Descripción:** Compila el proyecto desde cero y ejecuta todos los casos de prueba del paquete `src/test/java/edu/dosw/Kappa_Stats_BackEnd/`
+
+#### **📊 Generar reporte de cobertura**
+```bash
+mvn clean test jacoco:report
+```
+> **💡 Descripción:** Ejecuta las pruebas y genera un reporte detallado de cobertura de código
+
+#### **🎯 Ejecutar pruebas específicas**
+```bash
+mvn test -Dtest=StatisticsControllerTest
+```
+> **💡 Descripción:** Ejecuta únicamente las pruebas de una clase específica
+
+#### **⚡ Ejecución en modo continuo**
+```bash
+mvn test -Dcontinuous
+```
+> **💡 Descripción:** Ejecuta las pruebas automáticamente cuando detecta cambios en el código
+
+
+## 11. 🚀 Ejecución del Proyecto
+
+El microservicio de estadísticas puede ejecutarse tanto en un entorno local de desarrollo como en un entorno productivo ya desplegado y contenerizado. A continuación se describen ambas opciones:
+
+### Ejecución en entorno productivo (desplegado)
+
+- El backend se encuentra desplegado en la nube y puede ser accedido directamente a través de la siguiente URL:
+
+- 🔗 **Backend en producción:** [kappa](kappa-stats-dev-bqbahbc6e2araxa2.mexicocentral-01.azurewebsites.net)
+- 📘 **Swagger (OpenAPI):** [kappa-swagger](kappa-stats-dev-bqbahbc6e2araxa2.mexicocentral-01.azurewebsites.net/swagger-ui/index.html)
+
+- No se requiere instalación local para consumir la API o probar los endpoints documentados.
+
+---
+
+## 12. ☁️ Evidencia de CI/CD y Despliegue en Azure
+
+Esta sección resume la evidencia del pipeline de integración continua y despliegue continuo (CI/CD) y cómo está
+configurado el despliegue en Azure App Service para este microservicio.
+
+- **CI (Integración Continua)**: Se utiliza **GitHub Actions** para ejecutar el pipeline en cada `push` y `pull request`.
+  - Tareas automáticas típicas: compilación (`mvn clean package`), ejecución de pruebas unitarias e integración (`mvn test`),
+    análisis de cobertura (JaCoCo) y análisis estático (por ejemplo, SonarQube si está configurado).
+  - Archivo de workflow: `.github/workflows/ci-cd.yml` (revisa el repositorio para ver pasos y triggers concretos).
+
+- **CD (Despliegue Continuo)**: El pipeline publica el artefacto y despliega automáticamente a **Azure App Service**.
+  - Registro de despliegue: el servicio está configurado para desplegar la imagen/artefacto generado por la pipeline.
+  - Endpoint público: `https://kappa-stats-dev-bqbahbc6e2araxa2.mexicocentral-01.azurewebsites.net`
+
+![CI/CD Evidence](docs/imagenes/Actions.png)
 
 
 
-## 11. 🗂️ Código de la implementación organizado en las respectivas carpetas
-
-
-
-## 12. 📝 Código documentado
-
-
-
-## 13. 🧾 Pruebas coherentes con el porcentaje de cobertura expuesto
-
-
-
-## 14. 🚀 Ejecución del Proyecto
-
-
-
-## 15. ☁️ Evidencia de CI/CD y Despliegue en Azure
-
-
-
-## 16. 🤝 Contribuciones y agradecimientos
+## 13. 🤝 Contribuciones y agradecimientos
 
 El desarrollo del backend de ECIEXPRESS se realizó aplicando la **metodología ágil Scrum**, promoviendo la colaboración, la mejora continua y la entrega incremental de valor.  
 Durante el proceso, el equipo KAPPA trabajó en **sprints semanales**, realizando **revisiones de avance**, **dailies** y **retrospectivas**, lo que permitió mantener una comunicación fluida y adaptarse a los cambios de requisitos en tiempo real.
