@@ -1,6 +1,7 @@
 package edu.dosw.Kappa_Stats_BackEnd.Infrastructure.Web;
 
 import edu.dosw.Kappa_Stats_BackEnd.Application.Dtos.*;
+import edu.dosw.Kappa_Stats_BackEnd.Application.Services.StatsServices.ExcelAllStatisticsService;
 import edu.dosw.Kappa_Stats_BackEnd.Application.Services.UseCases.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -25,6 +27,7 @@ public class StatisticsController {
     private final GenerateProductRankingUseCase topProducts;
     private final GenerateWeeklySalesUseCase weekly;
     private final GenerateMonthlySalesUseCase monthly;
+    private final ExcelAllStatisticsService excelAllService;
 
 
     @Operation(
@@ -221,4 +224,16 @@ public class StatisticsController {
     ) {
         return topProducts.generateTopProducts(store);
     }
+
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> exportAllStatistics(@RequestParam String store) {
+        byte [] excel = excelAllService.generateAllStatistics(store);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=all-statistics.xlsx")
+                .body(excel);
+
+    }
+
+
 }

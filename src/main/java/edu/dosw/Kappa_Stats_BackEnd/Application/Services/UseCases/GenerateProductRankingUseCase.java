@@ -29,12 +29,12 @@ public class GenerateProductRankingUseCase {
             BigDecimal revenue = entry.getValue().stream()
                     .map(OrderRecord::getTotalPrice)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
-
             result.add(new ProductSalesReport(
                     store,
                     entry.getKey(),
                     totalSold,
-                    revenue
+                    revenue,
+                    entry.getValue().get(0).getProductName()
             ));
         }
 

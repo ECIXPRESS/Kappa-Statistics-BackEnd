@@ -6,5 +6,6 @@ public record ProductSalesReport(
         String store,
         String productId,
         Integer totalSold,
-        BigDecimal totalRevenue
+        BigDecimal totalRevenue,
+        String productName
 ) {}

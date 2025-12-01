@@ -23,7 +23,6 @@ public class GenerateDailySalesUseCase {
         BigDecimal totalRevenue = records.stream()
                 .map(OrderRecord::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         return new DailySalesReport(
                 store,
                 date.toString(),
