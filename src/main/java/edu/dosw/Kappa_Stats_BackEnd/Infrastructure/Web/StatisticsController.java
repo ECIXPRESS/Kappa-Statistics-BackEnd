@@ -226,6 +226,28 @@ public class StatisticsController {
         return topProducts.generateTopProducts(store);
     }
 
+    @Operation(
+            summary = "Exportar todas las estadísticas en Excel",
+            description = "Genera y descarga un archivo Excel con todas las estadísticas de la tienda especificada.",
+            parameters = {
+                    @Parameter(
+                            name = "store",
+                            description = "Identificador de la tienda",
+                            required = true,
+                            example = "STORE-01"
+                    )
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Archivo Excel generado exitosamente",
+                            content = @Content(
+                                    mediaType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                    schema = @Schema(type = "string", format = "binary")
+                            )
+                    )
+            }
+    )
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportAllStatistics(@RequestParam String store) {
         byte [] excel = excelAllService.generateAllStatistics(store);
