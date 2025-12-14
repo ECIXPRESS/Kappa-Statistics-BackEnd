@@ -1,6 +1,7 @@
 package edu.dosw.Kappa_Stats_BackEnd.Infrastructure.Web;
 
 import edu.dosw.Kappa_Stats_BackEnd.Application.Dtos.*;
+import edu.dosw.Kappa_Stats_BackEnd.Application.Ports.OrderRecordRepositoryPort;
 import edu.dosw.Kappa_Stats_BackEnd.Application.Services.StatsServices.ExcelAllStatisticsService;
 import edu.dosw.Kappa_Stats_BackEnd.Application.Services.UseCases.*;
 import edu.dosw.Kappa_Stats_BackEnd.Domain.Model.OrderRecord;
@@ -34,6 +35,7 @@ public class StatisticsController {
     private final GenerateWeeklySalesUseCase weeklyUseCase;
     private final GenerateMonthlySalesUseCase monthlyUseCase;
     private final ExcelAllStatisticsService excelAllService;
+    private final OrderRecordRepositoryPort repositoryPort;
 
     @Operation(
             summary = "Obtener ventas diarias",
@@ -370,5 +372,52 @@ public class StatisticsController {
         ));
     }
 
+    @Operation(
+            summary = "Endpoint de debug para datos",
+            description = "Endpoint para debugging que muestra información detallada sobre los registros almacenados",
+            hidden = true
+    )
+    @GetMapping("/debug")
+    public ResponseEntity<Map<String, Object>> debugData(
+            @Parameter(description = "Identificador de la tienda", example = "STORE-01")
+            @RequestParam("store") String store,
 
+            @Parameter(description = "Fecha para filtrar (YYYY-MM-DD)", example = "2025-01-10")
+            @RequestParam("date")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate date
+    ) {
+        Map<String, Object> response = new HashMap<>();
+
+        List<OrderRecord> allRecords = repositoryPort.findAll();
+        List<OrderRecord> forStore = allRecords.stream()
+                .filter(r -> r.getStore().equals(store))
+                .collect(Collectors.toList());
+
+        List<OrderRecord> forDate = forStore.stream()
+                .filter(r -> r.getDate().equals(date))
+                .collect(Collectors.toList());
+
+        List<OrderRecord> viaMethod = repositoryPort.findByStoreAndDateBetween(store, date, date);
+
+        response.put("store", store);
+        response.put("date", date);
+        response.put("totalRecords", allRecords.size());
+        response.put("recordsForStore", forStore.size());
+        response.put("recordsForStoreAndDate", forDate.size());
+        response.put("viaFindByStoreAndDateBetween", viaMethod.size());
+
+        response.put("sampleRecords", forDate.stream()
+                .limit(3)
+                .map(r -> Map.of(
+                        "id", r.getId(),
+                        "product", r.getProductName(),
+                        "quantity", r.getQuantity(),
+                        "totalPrice", r.getTotalPrice(),
+                        "date", r.getDate().toString()
+                ))
+                .collect(Collectors.toList()));
+
+        return ResponseEntity.ok(response);
+    }
 }
