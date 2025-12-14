@@ -1,4 +1,3 @@
-// File: TestDataController.java
 package edu.dosw.Kappa_Stats_BackEnd.Infrastructure.Web;
 
 import edu.dosw.Kappa_Stats_BackEnd.Application.Ports.OrderRecordRepositoryPort;
@@ -17,24 +16,35 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/test")
-@Profile("dev")  // Solo disponible en entorno de desarrollo
+@Profile("dev")
 @RequiredArgsConstructor
 public class TestDataController {
 
     private final OrderRecordRepositoryPort repositoryPort;
 
     @PostMapping("/seed-data")
-    public ResponseEntity<Map<String, Object>> seedTestData() {
+    public ResponseEntity<Map<String, Object>> seedTestData(
+            @RequestBody(required = false) Map<String, Object> customData) {
         try {
             System.out.println("=== SEED-DATA ENDPOINT LLAMADO ===");
 
             List<OrderRecord> existingData = repositoryPort.findAll();
             System.out.println("Registros existentes: " + existingData.size());
 
-            existingData.forEach(record -> repositoryPort.deleteById(record.getId()));
-            System.out.println("Registros eliminados");
+            if (!existingData.isEmpty()) {
+                existingData.forEach(record -> repositoryPort.deleteById(record.getId()));
+                System.out.println("Registros anteriores eliminados");
+            }
 
-            List<OrderRecord> testData = createTestData();
+            List<OrderRecord> testData;
+
+            if (customData != null && !customData.isEmpty()) {
+                System.out.println("Creando datos personalizados desde request...");
+                testData = createCustomData(customData);
+            } else {
+                System.out.println("Usando datos de prueba por defecto...");
+                testData = createTestData();
+            }
 
             System.out.println("\n=== GUARDANDO DATOS EN MONGODB ===");
             List<OrderRecord> savedRecords = new ArrayList<>();
@@ -54,14 +64,14 @@ public class TestDataController {
             System.out.println("Total en MongoDB después de guardar: " + allAfterSave.size());
 
             analyzeStoreData("STORE-01");
-            analyzeStoreData("STORE-02");
-            analyzeStoreData("CAFE-LEYENDA");
 
             return ResponseEntity.ok(Map.of(
-                    "message", "Datos de prueba insertados correctamente",
+                    "message", customData != null ?
+                            "Datos personalizados insertados correctamente" :
+                            "Datos de prueba insertados correctamente",
                     "recordsInserted", testData.size(),
                     "timestamp", LocalDate.now().toString(),
-                    "stores", List.of("STORE-01", "STORE-02", "CAFE-LEYENDA")
+                    "note", "Para eliminar un registro, use DELETE /api/test/clear-data/{id}"
             ));
 
         } catch (Exception e) {
@@ -69,6 +79,72 @@ public class TestDataController {
             return ResponseEntity.internalServerError()
                     .body(Map.of(
                             "error", "Error al insertar datos de prueba",
+                            "message", e.getMessage()
+                    ));
+        }
+    }
+
+    private List<OrderRecord> createCustomData(Map<String, Object> customData) {
+        System.out.println("\n=== CREANDO DATOS PERSONALIZADOS ===");
+
+        List<OrderRecord> records = new ArrayList<>();
+
+        try {
+            String store = (String) customData.getOrDefault("store", "STORE-01");
+            String dateStr = (String) customData.getOrDefault("date", "2025-12-14");
+            LocalDate date = LocalDate.parse(dateStr);
+
+            System.out.println("Tienda: " + store);
+            System.out.println("Fecha: " + date);
+
+            if (customData.containsKey("products")) {
+                List<Map<String, Object>> products = (List<Map<String, Object>>) customData.get("products");
+
+                for (int i = 0; i < products.size(); i++) {
+                    Map<String, Object> productData = products.get(i);
+
+                    String orderId = (String) productData.getOrDefault("orderId", "ORD-" + (i + 1));
+                    String productId = (String) productData.getOrDefault("productId", "CAF-001");
+                    String productName = (String) productData.getOrDefault("productName", "Café Americano");
+                    int quantity = ((Number) productData.getOrDefault("quantity", 1)).intValue();
+                    double price = ((Number) productData.getOrDefault("price", 4500.00)).doubleValue();
+
+                    records.add(createRecord(store, orderId, productId, productName, quantity, price, date));
+                    System.out.println("  Producto " + (i+1) + ": " + productName + " x" + quantity);
+                }
+            } else {
+                records.add(createRecord(store, "ORD-001", "CAF-001", "Café Americano", 2, 9000.00, date));
+                System.out.println("  Producto por defecto: Café Americano x2");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error creando datos personalizados: " + e.getMessage());
+            System.out.println("Creando datos por defecto...");
+            records = createTestData();
+        }
+
+        System.out.println("Total registros creados: " + records.size());
+        System.out.println("=== FIN CREACIÓN DATOS ===\n");
+        return records;
+    }
+
+    @DeleteMapping("/clear-data")
+    public ResponseEntity<Map<String, Object>> clearAllData() {
+        try {
+            List<OrderRecord> allRecords = repositoryPort.findAll();
+            long count = allRecords.size();
+
+            allRecords.forEach(record -> repositoryPort.deleteById(record.getId()));
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Todos los datos han sido eliminados",
+                    "recordsDeleted", count
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of(
+                            "error", "Error al eliminar datos",
                             "message", e.getMessage()
                     ));
         }
@@ -177,28 +253,6 @@ public class TestDataController {
                 .collect(Collectors.toList());
     }
 
-    @DeleteMapping("/clear-data")
-    public ResponseEntity<Map<String, Object>> clearAllData() {
-        try {
-            List<OrderRecord> allRecords = repositoryPort.findAll();
-            long count = allRecords.size();
-
-            allRecords.forEach(record -> repositoryPort.deleteById(record.getId()));
-
-            return ResponseEntity.ok(Map.of(
-                    "message", "Todos los datos han sido eliminados",
-                    "recordsDeleted", count
-            ));
-
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of(
-                            "error", "Error al eliminar datos",
-                            "message", e.getMessage()
-                    ));
-        }
-    }
-
     private List<OrderRecord> createTestData() {
         System.out.println("\n=== CREANDO DATOS DE PRUEBA ===");
 
@@ -215,44 +269,24 @@ public class TestDataController {
         System.out.println("Fecha mes pasado: " + dateLastMonth);
 
         List<OrderRecord> records = List.of(
-
                 createRecord("STORE-01", "ORD-008", "CAF-001", "Café Americano", 4, 18000.00, dateYouQuery),
                 createRecord("STORE-01", "ORD-001", "CAF-001", "Café Americano", 2, 9000.00, dateToday),
                 createRecord("STORE-01", "ORD-003", "CAF-001", "Café Americano", 3, 13500.00, dateYesterday),
                 createRecord("STORE-01", "ORD-007", "CAF-001", "Café Americano", 5, 22500.00, dateLastMonth),
-
                 createRecord("STORE-01", "ORD-009", "SNK-002", "Torta de Chocolate", 2, 16000.00, dateYouQuery),
                 createRecord("STORE-01", "ORD-006", "SNK-002", "Torta de Chocolate", 1, 8000.00, dateLastWeek),
-
                 createRecord("STORE-01", "ORD-005", "CAF-003", "Latte", 2, 16000.00, dateLastWeek),
-
                 createRecord("STORE-01", "ORD-002", "CAF-002", "Capuchino", 1, 12000.00, dateToday),
-
                 createRecord("STORE-01", "ORD-004", "LCH-001", "Almuerzo Ejecutivo", 1, 25000.00, dateYesterday),
-
                 createRecord("STORE-01", "ORD-001", "SNK-001", "Croissant", 1, 5000.00, dateToday),
-
                 createRecord("STORE-02", "ORD-101", "PAP-001", "Cuaderno Universitario", 5, 25000.00, dateToday),
-
                 createRecord("STORE-02", "ORD-104", "PAP-003", "Lápices HB", 12, 6000.00, dateLastWeek),
-
                 createRecord("STORE-02", "ORD-103", "IMP-001", "Impresión Color", 10, 5000.00, dateYesterday),
-
                 createRecord("STORE-02", "ORD-102", "PAP-002", "Paquete de Hojas", 2, 12000.00, dateToday),
-
-
                 createRecord("STORE-02", "ORD-105", "PAP-004", "Resaltadores", 3, 9000.00, dateLastMonth),
-
-
                 createRecord("CAFE-LEYENDA", "ORD-201", "CAF-001", "Café Americano", 3, 13500.00, dateToday),
-
-
                 createRecord("CAFE-LEYENDA", "ORD-202", "SNK-003", "Empanada de Carne", 2, 10000.00, dateToday),
-
-
                 createRecord("CAFE-LEYENDA", "ORD-204", "SNK-004", "Jugo Natural", 2, 12000.00, dateLastWeek),
-
-
                 createRecord("CAFE-LEYENDA", "ORD-203", "CAF-004", "Mocaccino", 1, 14000.00, dateYesterday)
         );
 
@@ -280,7 +314,6 @@ public class TestDataController {
         try {
             LocalDate targetDate = LocalDate.of(2025, 12, 12);
             String store = "STORE-01";
-
 
             List<OrderRecord> method1 = null;
             List<OrderRecord> method2 = null;
@@ -332,7 +365,6 @@ public class TestDataController {
         }
     }
 
-
     @GetMapping("/test-product-ranking")
     public ResponseEntity<Map<String, Object>> testProductRanking(
             @RequestParam(required = false, defaultValue = "STORE-01") String storeId) {
@@ -341,7 +373,6 @@ public class TestDataController {
             System.out.println("\n=== TEST PRODUCT RANKING ===");
             System.out.println("Tienda: " + storeId);
 
-            // Obtener todos los registros de la tienda
             List<OrderRecord> allRecords = repositoryPort.findByStore(storeId);
 
             if (allRecords.isEmpty()) {
@@ -352,7 +383,6 @@ public class TestDataController {
                         "ranking", List.of()
                 ));
             }
-
 
             Map<String, Map<String, Object>> productStats = allRecords.stream()
                     .collect(Collectors.groupingBy(
@@ -377,7 +407,6 @@ public class TestDataController {
                                     }
                             )
                     ));
-
 
             List<Map<String, Object>> ranking = productStats.entrySet().stream()
                     .sorted((a, b) -> Integer.compare(
