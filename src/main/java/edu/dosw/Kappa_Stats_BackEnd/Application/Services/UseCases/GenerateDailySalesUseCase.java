@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,9 +36,38 @@ public class GenerateDailySalesUseCase {
                 );
             }
 
-            List<OrderRecord> records = repositoryPort.findByStoreAndDateBetween(
-                    store, date, date
+            List<OrderRecord> allRecordsInRange = repositoryPort.findByStoreAndDateBetween(
+                    store,
+                    date,
+                    date.plusDays(1)  // endDate exclusive
             );
+
+            System.out.println("=== DEBUG: TODOS LOS REGISTROS EN RANGO ===");
+            System.out.println("Rango: " + date + " a " + date.plusDays(1));
+            System.out.println("Total en rango: " + allRecordsInRange.size());
+
+            allRecordsInRange.forEach(r -> {
+                System.out.println("  - Orden: " + r.getOrderId() +
+                        " | Producto: " + r.getProductName() +
+                        " | Cantidad: " + r.getQuantity() +
+                        " | Precio: " + r.getTotalPrice() +
+                        " | Fecha: " + r.getDate());
+            });
+
+            List<OrderRecord> records = allRecordsInRange.stream()
+                    .filter(r -> r.getDate().equals(date))
+                    .collect(Collectors.toList());
+
+            System.out.println("=== DEBUG: FILTRADOS POR FECHA EXACTA ===");
+            System.out.println("Fecha exacta: " + date);
+            System.out.println("Total después de filtrar: " + records.size());
+
+            records.forEach(r -> {
+                System.out.println("  - Orden: " + r.getOrderId() +
+                        " | Producto: " + r.getProductName() +
+                        " | Cantidad: " + r.getQuantity() +
+                        " | Precio: " + r.getTotalPrice());
+            });
 
             if (records.isEmpty()) {
                 Map<String, Object> details = new HashMap<>();
@@ -54,6 +84,11 @@ public class GenerateDailySalesUseCase {
             int totalOrders = calculateTotalOrders(records);
             int totalProducts = calculateTotalProducts(records);
             BigDecimal totalRevenue = calculateTotalRevenue(records);
+
+            System.out.println("=== DEBUG: CÁLCULOS FINALES ===");
+            System.out.println("Órdenes distintas: " + totalOrders);
+            System.out.println("Productos totales: " + totalProducts);
+            System.out.println("Revenue total: " + totalRevenue);
 
             return new DailySalesReport(
                     store,

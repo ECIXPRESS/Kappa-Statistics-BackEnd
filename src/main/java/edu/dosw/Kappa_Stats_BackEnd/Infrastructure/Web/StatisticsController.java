@@ -370,39 +370,5 @@ public class StatisticsController {
         ));
     }
 
-    @GetMapping("/debug/check-date")
-    public ResponseEntity<Map<String, Object>> debugCheckDate(
-            @RequestParam String store,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
-        Map<String, Object> response = new HashMap<>();
-
-        List<OrderRecord> allRecords = repositoryPort.findAll();
-        List<OrderRecord> forStore = allRecords.stream()
-                .filter(r -> r.getStore().equals(store))
-                .collect(Collectors.toList());
-
-        List<OrderRecord> forDate = forStore.stream()
-                .filter(r -> r.getDate().equals(date))
-                .collect(Collectors.toList());
-
-        List<OrderRecord> viaMethod = repositoryPort.findByStoreAndDateBetween(store, date, date);
-
-        response.put("store", store);
-        response.put("date", date);
-        response.put("totalRecords", allRecords.size());
-        response.put("recordsForStore", forStore.size());
-        response.put("recordsForStoreAndDate", forDate.size());
-        response.put("viaFindByStoreAndDateBetween", viaMethod.size());
-        response.put("sampleRecords", forDate.stream()
-                .limit(3)
-                .map(r -> Map.of(
-                        "id", r.getId(),
-                        "product", r.getProductName(),
-                        "quantity", r.getQuantity()
-                ))
-                .collect(Collectors.toList()));
-
-        return ResponseEntity.ok(response);
-    }
 }

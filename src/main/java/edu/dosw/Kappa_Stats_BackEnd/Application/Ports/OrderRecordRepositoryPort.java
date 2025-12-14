@@ -20,6 +20,8 @@ public interface OrderRecordRepositoryPort {
 
     List<OrderRecord> findByStore(String store);
 
+    List<OrderRecord> findByStoreAndDate(String store, LocalDate date);
+
     List<OrderRecord> findByStoreAndDateBetween(String store, LocalDate startDate, LocalDate endDate);
 
     long count();

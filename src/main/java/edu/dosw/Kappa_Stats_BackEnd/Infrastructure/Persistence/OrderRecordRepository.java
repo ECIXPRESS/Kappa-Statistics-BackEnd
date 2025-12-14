@@ -15,10 +15,15 @@ public interface OrderRecordRepository extends MongoRepository<OrderRecord, Stri
 
     List<OrderRecord> findByStore(String store);
 
-    @Query("{'store': ?0, 'date': {$gte: ?1, $lte: ?2}}")
+    @Query("{'store': ?0, 'date': {$gte: ?1, $lt: ?2}}")  // $lt excluye el final
     List<OrderRecord> findByStoreAndDateBetween(String store, LocalDate startDate, LocalDate endDate);
 
-    List<OrderRecord> findByStoreAndDate(String store, LocalDate date);
+    @Query("{'store': ?0, 'date': {$gte: ?1, $lt: ?2}}")
+    List<OrderRecord> findByStoreAndDateRange(String store, LocalDate startDate, LocalDate endDate);
+
+    default List<OrderRecord> findByStoreAndDate(String store, LocalDate date) {
+        return findByStoreAndDateRange(store, date, date.plusDays(1));
+    }
 
     @Query("{'productId': ?0, 'store': ?1}")
     List<OrderRecord> findByProductIdAndStore(String productId, String store);

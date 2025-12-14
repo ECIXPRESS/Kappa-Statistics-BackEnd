@@ -3,29 +3,28 @@ package edu.dosw.Kappa_Stats_BackEnd.Application.Services.UseCases;
 import edu.dosw.Kappa_Stats_BackEnd.Application.Dtos.ProductSalesReport;
 import edu.dosw.Kappa_Stats_BackEnd.Exception.ApplicationException;
 import edu.dosw.Kappa_Stats_BackEnd.Exception.ErrorCodes;
-import edu.dosw.Kappa_Stats_BackEnd.Application.Ports.OrderRecordRepositoryPort;
-import edu.dosw.Kappa_Stats_BackEnd.Domain.Model.OrderRecord;
+import edu.dosw.Kappa_Stats_BackEnd.Application.Ports.ProductRankingPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class GenerateProductRankingUseCase {
 
-    private final OrderRecordRepositoryPort repositoryPort;
+    private final ProductRankingPort productRankingPort;
 
     public List<ProductSalesReport> execute(GenerateTopProductsCommand command) {
         try {
             validateCommand(command);
 
             String store = command.storeId();
-            List<OrderRecord> allRecords = repositoryPort.findByStore(store);
 
-            if (allRecords.isEmpty()) {
+            List<ProductSalesReport> result = productRankingPort.generateTopProducts(store);
+
+            if (result.isEmpty()) {
                 throw ApplicationException.notFound(
                         String.format("No sales data found for store '%s'", store),
                         ErrorCodes.NO_SALES_DATA,
@@ -33,37 +32,7 @@ public class GenerateProductRankingUseCase {
                 );
             }
 
-            Map<String, List<OrderRecord>> groupedByProduct = allRecords.stream()
-                    .collect(Collectors.groupingBy(OrderRecord::getProductId));
-
-            List<ProductSalesReport> result = new ArrayList<>();
-
-            for (Map.Entry<String, List<OrderRecord>> entry : groupedByProduct.entrySet()) {
-                String productId = entry.getKey();
-                List<OrderRecord> productRecords = entry.getValue();
-
-                int totalSold = productRecords.stream()
-                        .mapToInt(OrderRecord::getQuantity)
-                        .sum();
-
-                BigDecimal revenue = productRecords.stream()
-                        .map(OrderRecord::getTotalPrice)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                String productName = productRecords.get(0).getProductName();
-
-                result.add(new ProductSalesReport(
-                        store,
-                        productId,
-                        totalSold,
-                        revenue,
-                        productName
-                ));
-            }
-
-            return result.stream()
-                    .sorted(Comparator.comparing(ProductSalesReport::totalSold).reversed())
-                    .collect(Collectors.toList());
+            return result;
 
         } catch (ApplicationException e) {
             throw e;
