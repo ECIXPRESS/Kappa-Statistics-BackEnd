@@ -209,6 +209,11 @@
                                 <exclude>/configurators/</exclude>
                                 <exclude>edu/dosw/Kappa_Stats_BackEnd/controller/dtos/**</exclude>
                                 <exclude>edu/dosw/Kappa_Stats_BackEnd/model/entities/**</exclude>
+                                <exclude>edu/dosw/Kappa_Stats_BackEnd/Application/Services/StatsServices/**</exclude>
+                                <exclude>edu/dosw/Kappa_Stats_BackEnd/Application/Ports/**</exclude>
+                                <exclude>edu/dosw/Kappa_Stats_BackEnd/Config/**</exclude>
+                                <exclude>edu/dosw/Kappa_Stats_BackEnd/Infrastructure/**</exclude>
+                                <exclude>edu/dosw/Kappa_Stats_BackEnd/Exception/**</exclude>
                             </excludes>
                         </configuration>
                     </execution>
