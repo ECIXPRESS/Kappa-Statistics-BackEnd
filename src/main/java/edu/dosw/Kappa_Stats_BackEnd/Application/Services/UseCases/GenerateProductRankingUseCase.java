@@ -1,45 +1,64 @@
 package edu.dosw.Kappa_Stats_BackEnd.Application.Services.UseCases;
 
 import edu.dosw.Kappa_Stats_BackEnd.Application.Dtos.ProductSalesReport;
-import edu.dosw.Kappa_Stats_BackEnd.Domain.Model.OrderRecord;
-import edu.dosw.Kappa_Stats_BackEnd.Infrastructure.Persistence.OrderRecordRepository;
+import edu.dosw.Kappa_Stats_BackEnd.Exception.ApplicationException;
+import edu.dosw.Kappa_Stats_BackEnd.Exception.ErrorCodes;
+import edu.dosw.Kappa_Stats_BackEnd.Application.Ports.ProductRankingPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class GenerateProductRankingUseCase {
 
-    private final OrderRecordRepository repository;
+    private final ProductRankingPort productRankingPort;
 
-    public List<ProductSalesReport> generateTopProducts(String store) {
-        List<OrderRecord> all = repository.findAll().stream().filter(r->r.getStore().equals(store)).toList();
+    public List<ProductSalesReport> execute(GenerateTopProductsCommand command) {
+        try {
+            validateCommand(command);
 
-        Map<String, List<OrderRecord>> grouped = all.stream()
-                .collect(Collectors.groupingBy(OrderRecord::getProductId));
+            String store = command.storeId();
 
-        List<ProductSalesReport> result = new ArrayList<>();
+            List<ProductSalesReport> result = productRankingPort.generateTopProducts(store);
 
-        for (var entry : grouped.entrySet()) {
-            int totalSold = entry.getValue().stream().mapToInt(OrderRecord::getQuantity).sum();
-            BigDecimal revenue = entry.getValue().stream()
-                    .map(OrderRecord::getTotalPrice)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            result.add(new ProductSalesReport(
-                    store,
-                    entry.getKey(),
-                    totalSold,
-                    revenue,
-                    entry.getValue().get(0).getProductName()
-            ));
+            if (result.isEmpty()) {
+                throw ApplicationException.notFound(
+                        String.format("No sales data found for store '%s'", store),
+                        ErrorCodes.NO_SALES_DATA,
+                        Map.of("storeId", store)
+                );
+            }
+
+            return result;
+
+        } catch (ApplicationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw ApplicationException.technical(
+                    String.format("Failed to generate product ranking for store '%s'",
+                            command.storeId()),
+                    ErrorCodes.REPORT_GENERATION_FAILED,
+                    e
+            );
+        }
+    }
+
+    private void validateCommand(GenerateTopProductsCommand command) {
+        if (command == null) {
+            throw ApplicationException.validation(
+                    "Command cannot be null",
+                    "COMMAND_NULL"
+            );
         }
 
-        return result.stream()
-                .sorted(Comparator.comparing(ProductSalesReport::totalSold).reversed())
-                .toList();
+        if (command.storeId() == null || command.storeId().isBlank()) {
+            throw ApplicationException.validation(
+                    "Store ID cannot be null or empty",
+                    ErrorCodes.INVALID_STORE_ID
+            );
+        }
     }
 }
